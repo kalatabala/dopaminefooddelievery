@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CravingEats - The Self-Care Interceptor</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Quicksand:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Outfit', 'Quicksand', sans-serif;
+            background-color: #f7f9fa;
+        }
+
+        /* Glovo brand color palette */
+        .brand-yellow { background-color: #ffc244; }
+        .brand-yellow-text { color: #ffc244; }
+        .brand-green { background-color: #00a082; }
+        .brand-green-text { color: #00a082; }
+        .brand-green-hover:hover { background-color: #008f73; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+
+        /* Animated Pulsing Breathing Bubble */
+        @keyframes breathScale {
+            0%, 100% { transform: scale(1); background-color: rgba(0, 160, 130, 0.2); }
+            50% { transform: scale(1.4); background-color: rgba(255, 194, 68, 0.35); }
+        }
+        .breathing-bubble {
+            animation: breathScale 8s infinite ease-in-out;
+        }
+
+        /* Particle Burn effect */
+        @keyframes burnOut {
+            0% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+            100% { transform: scale(0.8) translateY(-100px); opacity: 0; filter: blur(8px); }
+        }
+        .burning {
+            animation: burnOut 1.5s forwards ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col selection:bg-yellow-200">
+
+    <!-- GLOVO STYLE HEADER -->
+    <header class="w-full bg-[#ffc244] sticky top-0 z-30 shadow-sm px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <!-- Glovo logo styled badge -->
+            <div class="bg-white text-slate-900 font-extrabold px-3 py-1.5 rounded-full text-lg tracking-tight flex items-center gap-1.5 shadow-sm">
+                <span class="text-xl">💛</span>
+                <span>Craving<span class="brand-green-text">Eats</span></span>
+            </div>
+            <!-- Header Address Display -->
+            <div class="hidden sm:flex items-center gap-1.5 bg-white/40 hover:bg-white/60 transition cursor-pointer px-3 py-1.5 rounded-full text-xs font-semibold text-slate-900">
+                <span>📍</span>
+                <span id="header-address" data-i18n="header_address_placeholder">Select Delivery Address at checkout</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Global Stats badge -->
+            <div class="hidden xs:flex items-center gap-2 bg-slate-900/90 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+                <span>💰 <span data-i18n="stats_saved_label">Saved:</span> <span id="global-money-saved" class="text-emerald-400">$0.00</span></span>
+                <span class="text-slate-600">|</span>
+                <span>🏄‍♂️ <span data-i18n="stats_waves_label">Waves:</span> <span id="global-waves" class="text-amber-400">0</span></span>
+            </div>
+            <!-- Language Toggle -->
+            <div class="flex items-center bg-white rounded-full shadow-sm p-0.5 text-xs font-bold">
+                <button onclick="applyLanguage('en')" id="lang-btn-en" class="px-2.5 py-1.5 rounded-full transition">🇬🇧 EN</button>
+                <button onclick="applyLanguage('bg')" id="lang-btn-bg" class="px-2.5 py-1.5 rounded-full transition">🇧🇬 BG</button>
+            </div>
+            <!-- Mute/Sound Toggle -->
+            <button onclick="toggleMute()" id="mute-btn" class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-sm hover:scale-105 transition">
+                🔊
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE WRAPPER -->
+    <main class="flex-1 w-full max-w-5xl mx-auto p-4 md:p-6 flex flex-col">
+        
+        <!-- ================= VIEW 1: RESTAURANT BROWSER (HOME) ================= -->
+        <div id="view-home" class="space-y-6">
+            
+            <!-- Hero Promo Banner -->
+            <div class="brand-green text-white p-6 rounded-3xl relative overflow-hidden shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="space-y-2 max-w-lg z-10">
+                    <span class="bg-yellow-400 text-slate-950 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider" data-i18n="hero_tag">Mindful Intervention</span>
+                    <h1 class="text-2xl md:text-3xl font-extrabold leading-tight" data-i18n="hero_title">Feeling an intense craving hitting you right now?</h1>
+                    <p class="text-sm text-emerald-100" data-i18n="hero_desc">Browse your comfort options, add your favorite treats to the cart, and let's intercept those binging impulses with science!</p>
+                </div>
+                <!-- Illustration element -->
+                <div class="text-7xl select-none filter drop-shadow-md z-10 animate-bounce">🛵</div>
+                <div class="absolute right-0 bottom-0 top-0 w-1/3 bg-white/5 skew-x-12 pointer-events-none"></div>
+            </div>
+
+            <!-- GLOVO STYLE CIRCULAR CATEGORY BUBBLES -->
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3" data-i18n="craving_question">What are you craving right now?</h2>
+                <div class="flex gap-4 overflow-x-auto pb-3 snap-x">
+                    <button onclick="filterCategory('all')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🔥</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_all">All</span>
+                    </button>
+                    <button onclick="filterCategory('burgers')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍔</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_burgers">Burgers</span>
+                    </button>
+                    <button onclick="filterCategory('sushi')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍣</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_sushi">Sushi</span>
+                    </button>
+                    <button onclick="filterCategory('salads')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🥗</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_salads">Salads</span>
+                    </button>
+                    <button onclick="filterCategory('tacos')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🌮</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_tacos">Tacos</span>
+                    </button>
+                    <button onclick="filterCategory('chicken')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍗</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_chicken">Chicken</span>
+                    </button>
+                    <button onclick="filterCategory('pasta')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍝</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_pasta">Pasta</span>
+                    </button>
+                    <button onclick="filterCategory('pizza')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍕</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_pizza">Pizza</span>
+                    </button>
+                    <button onclick="filterCategory('appetizers')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍟</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_appetizers">Appetizers</span>
+                    </button>
+                    <button onclick="filterCategory('ramen')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍜</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_ramen">Ramen</span>
+                    </button>
+                    <button onclick="filterCategory('bubble-tea')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🧋</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_drinks">Drinks</span>
+                    </button>
+                    <button onclick="filterCategory('desserts')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🍰</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_desserts">Sweets</span>
+                    </button>
+                    <button onclick="filterCategory('breakfast')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">🥞</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_breakfast">Breakfast</span>
+                    </button>
+                    <button onclick="filterCategory('coffee')" class="flex-shrink-0 snap-start flex flex-col items-center gap-2 group focus:outline-none">
+                        <div class="w-16 h-16 rounded-full bg-white shadow-sm hover:shadow-md border border-slate-100 flex items-center justify-center text-2xl transition group-hover:scale-105 active:scale-95">☕</div>
+                        <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-900" data-i18n="cat_coffee">Coffee</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RESTAURANTS SECTION -->
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span>🏪</span> <span data-i18n="featured_cafes">Featured Craving Cafes</span>
+                    </h2>
+                    <span id="filtered-label" class="text-xs bg-slate-200 px-2.5 py-1 rounded-full font-bold text-slate-600">Showing All</span>
+                </div>
+
+                <div id="restaurants-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= VIEW 2: RESTAURANT MENU VIEW ================= -->
+        <div id="view-restaurant" class="hidden space-y-6">
+            <!-- Back to Home Button -->
+            <button onclick="changeView('home')" class="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition font-sans">
+                ← <span data-i18n="back_to_stores">Back to Stores</span>
+            </button>
+
+            <!-- Store Banner -->
+            <div class="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden flex flex-col md:flex-row items-stretch">
+                <div class="md:w-1/3 relative h-48 md:h-auto min-h-[150px]">
+                    <img id="rest-img" class="w-full h-full object-cover" src="" alt="Restaurant Banner" onerror="this.src='https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=600&q=80'">
+                </div>
+                <div class="p-6 md:w-2/3 flex flex-col justify-center space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span id="rest-emoji" class="text-2xl"></span>
+                        <h2 id="rest-title" class="text-2xl font-extrabold text-slate-900"></h2>
+                    </div>
+                    <p id="rest-desc" class="text-sm text-slate-500 leading-relaxed"></p>
+                    <div class="flex flex-wrap gap-3 items-center text-xs font-bold text-slate-600 pt-1">
+                        <span id="rest-rating" class="text-amber-500">★ 0.0</span>
+                        <span>•</span>
+                        <span id="rest-fee">Fee: $0.00</span>
+                        <span>•</span>
+                        <span id="rest-time">15-20 min</span>
+                    </div>
+                    <a id="rest-phone" href="tel:+359881234567" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition pt-1">
+                        <span>📞</span><span id="rest-phone-label">+359 88 123 4567</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Menu List -->
+            <div>
+                <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4" data-i18n="menu_dishes">Menu Dishes</h3>
+                <div id="menu-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Injected via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 3: CART & CHECKOUT VIEW (ADDRESS AT THE END) ================= -->
+        <div id="view-cart" class="hidden max-w-lg mx-auto w-full bg-white border border-slate-100 rounded-3xl p-6 shadow-md space-y-6">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                    <span>🛒</span> <span data-i18n="checkout_basket">Your Checkout Basket</span>
+                </h2>
+                <button onclick="changeView('home')" class="text-xs text-slate-400 hover:text-slate-900 transition font-bold" data-i18n="cancel">Cancel</button>
+            </div>
+
+            <!-- Basket Items -->
+            <div id="cart-items-list" class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                <!-- Injected dynamically -->
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="space-y-2 pt-4 border-t border-slate-100 text-sm font-semibold text-slate-600">
+                <div class="flex justify-between">
+                    <span data-i18n="subtotal">Subtotal</span>
+                    <span id="cart-subtotal">$0.00</span>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span data-i18n="delivery_fee">Delivery Fee</span>
+                    <span id="cart-delivery-fee">$0.00</span>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400" id="tip-row">
+                    <span data-i18n="rider_tip">Rider Tip</span>
+                    <span id="cart-tip">$0.00</span>
+                </div>
+                <div class="flex justify-between text-base font-extrabold text-slate-900 pt-2 border-t border-slate-100">
+                    <span data-i18n="total_bill">Total Bill (To Save)</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+            </div>
+
+            <!-- TIP SELECTOR -->
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400" data-i18n="add_tip">Add a Tip for Your Rider</h3>
+                <div class="grid grid-cols-4 gap-2" id="tip-selector">
+                    <button onclick="setTip(0, this)" class="tip-btn bg-slate-100 text-slate-600 font-bold text-xs py-2 rounded-xl transition">$0</button>
+                    <button onclick="setTip(1, this)" class="tip-btn bg-slate-100 text-slate-600 font-bold text-xs py-2 rounded-xl transition">$1</button>
+                    <button onclick="setTip(2, this)" class="tip-btn bg-slate-100 text-slate-600 font-bold text-xs py-2 rounded-xl transition">$2</button>
+                    <button onclick="setTip(3, this)" class="tip-btn bg-slate-100 text-slate-600 font-bold text-xs py-2 rounded-xl transition">$3</button>
+                </div>
+            </div>
+
+            <!-- PROMO CODE -->
+            <div class="flex gap-2">
+                <input type="text" id="promo-input" data-i18n-placeholder="promo_placeholder" placeholder="Promo code" class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs outline-none focus:border-yellow-400 transition font-semibold uppercase">
+                <button onclick="applyPromo()" class="bg-slate-900 text-white font-bold text-xs px-4 rounded-xl hover:bg-slate-800 transition" data-i18n="apply">Apply</button>
+            </div>
+
+            <!-- ADDRESS AT THE END BLOCK -->
+            <div class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400" data-i18n="enter_address">📍 Enter Delivery Address</h3>
+                <p class="text-[11px] text-slate-500" data-i18n="enter_address_desc">We need your real location to coordinate with the nearest virtual delivery rider.</p>
+                <div class="relative">
+                    <input type="text" id="address-input" data-i18n-placeholder="address_placeholder" placeholder="e.g., 123 Sunshine Street, Apt 4B" 
+                           class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm outline-none focus:border-yellow-400 transition font-semibold">
+                    <span class="absolute left-3.5 top-3.5 text-xs text-slate-400">📍</span>
+                </div>
+                <p class="text-[11px] text-slate-400 flex items-center gap-1.5 flex-wrap"><span data-i18n="support_call_prompt">📞 Need help placing your order? Call support at</span> <a href="tel:+35929991234" class="font-bold text-emerald-600">+359 2 999 1234</a></p>
+            </div>
+
+            <!-- Checkout Call to Action -->
+            <button onclick="placeOrder()" class="w-full brand-green text-white font-bold py-3.5 px-4 rounded-2xl shadow-md brand-green-hover transition hover:scale-[1.01] active:scale-[0.99] flex justify-between items-center">
+                <span data-i18n="place_order">Place Delivery Order</span>
+                <span class="text-xs bg-black/20 px-2.5 py-1 rounded-full" id="btn-total-label">$0.00</span>
+            </button>
+        </div>
+
+        <!-- ================= VIEW 4: LIVE COURIER TRACKER & SURFING COMPANION ================= -->
+        <div id="view-tracking" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+            
+            <!-- LEFT COLUMN: Live Map Display & Core Interceptor -->
+            <div class="col-span-1 md:col-span-7 bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                
+                <!-- Simulated Live Status -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl animate-bounce">🛵</span>
+                        <div>
+                            <div class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-i18n="courier_status">Courier Status</div>
+                            <h3 id="courier-message" class="text-base font-extrabold text-slate-900">Rider preparing your mental surge...</h3>
+                        </div>
+                    </div>
+                    <!-- Countdown timer -->
+                    <div class="bg-amber-100 border border-amber-200 text-amber-700 px-4 py-2 rounded-2xl text-right">
+                        <div class="text-[10px] uppercase font-bold tracking-wider" data-i18n="estimated_delivery">Estimated Delivery</div>
+                        <div id="tracking-timer" class="text-xl font-bold font-mono">15:00</div>
+                    </div>
+                </div>
+
+                <!-- Rider Profile Card -->
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-2xl p-3 mt-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center text-xl border border-emerald-200">🧑‍🦱</div>
+                        <div>
+                            <div id="rider-name" class="text-sm font-extrabold text-slate-800">Ivo Petrov</div>
+                            <div class="text-[11px] text-slate-400 font-semibold">★ 4.9 <span data-i18n="rider_scooter">· Yellow Scooter · Plate CA 4471 KH</span></div>
+                        </div>
+                    </div>
+                    <a id="rider-phone" href="tel:+359891122334" class="w-10 h-10 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-sm transition text-sm" title="Call your rider">
+                        📞
+                    </a>
+                </div>
+
+                <!-- Animated Interactive Route Map SVG -->
+                <div class="bg-slate-50 rounded-2xl border border-slate-100 my-4 h-48 relative overflow-hidden flex items-center justify-center">
+                    <!-- SVG Background grid lines -->
+                    <svg class="absolute inset-0 w-full h-full stroke-slate-200/50" fill="none">
+                        <defs>
+                            <pattern id="map-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <path d="M 20 0 L 0 0 0 20" />
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#map-grid)" />
+                        
+                        <!-- Route Line path -->
+                        <path id="route-path" d="M 40 120 Q 150 20, 250 150 T 450 60" class="stroke-emerald-400" stroke-width="4" stroke-dasharray="8 6" stroke-linecap="round" />
+                    </svg>
+
+                    <!-- Rider pin -->
+                    <div id="map-rider" class="absolute w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-lg shadow-md transition-all duration-1000 z-10" style="left: 40px; top: 100px;">
+                        🛵
+                    </div>
+
+                    <!-- Destination pin -->
+                    <div class="absolute w-10 h-10 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-lg shadow-sm z-10" style="left: 430px; top: 40px;">
+                        🏠
+                    </div>
+
+                    <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-bold text-slate-500 border border-slate-100 shadow-sm">
+                        🗺️ <span data-i18n="tracking_route_to">Tracking Route to:</span> <span id="target-address-label" class="text-slate-800">Your Address</span>
+                    </div>
+                </div>
+
+                <!-- SURFING COMPANION DIALOG -->
+                <div class="bg-emerald-50/50 border border-emerald-200/50 rounded-2xl p-4 text-sm space-y-3">
+                    <h4 class="font-extrabold text-emerald-800 flex items-center gap-1.5">
+                        <span>🌊</span> <span data-i18n="craving_wave_title">The Craving Wave (Urge Surfing)</span>
+                    </h4>
+                    <p class="text-slate-600 leading-relaxed text-xs" data-i18n="craving_wave_desc">
+                        Intense emotional food cravings generally peak and subside in <strong>15 minutes</strong>. 
+                        Pretend your courier is bringing your exact cart, and use this interactive toolkit to "surf" the wave until the delivery window collapses.
+                    </p>
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button onclick="toggleSoundtrack()" id="bgm-btn" class="bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-xs py-2 px-3 rounded-xl transition shadow-sm">
+                            🎵 Relaxing Waves Music: OFF
+                        </button>
+                        <button onclick="showHelpModal()" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs py-2 px-3 rounded-xl transition border border-red-200/50 shadow-sm" data-i18n="sos_toolkit">
+                            🚨 Emergency SOS Toolkit
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Surfing Companion Tools (Breathing, Burning triggers, Action) -->
+            <div class="col-span-1 md:col-span-5 space-y-6 flex flex-col justify-start">
+                
+                <!-- TOOL 1: Breathing Bubble -->
+                <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col items-center text-center space-y-4">
+                    <div class="space-y-1">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-400" data-i18n="breathe_ground">Breathe & Ground</h3>
+                        <p class="text-[11px] text-slate-500" data-i18n="breathe_ground_desc">Sync your breathing to slow down your nervous system.</p>
+                    </div>
+
+                    <!-- Visual Breathing Orb -->
+                    <div class="w-36 h-36 rounded-full flex items-center justify-center relative">
+                        <div class="absolute inset-0 rounded-full breathing-bubble"></div>
+                        <div class="w-24 h-24 rounded-full bg-emerald-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md z-10 transition-all duration-300" id="breathing-label">
+                            Breathe In
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOOL 2: Burn / Vent box -->
+                <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+                    <div class="space-y-1">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-400" data-i18n="vent_title">Vent & Dissolve triggers</h3>
+                        <p class="text-[11px] text-slate-500" data-i18n="vent_desc">Write down what emotion sparked this craving (Stress? Boredom? Loneliness?), then incinerate it.</p>
+                    </div>
+                    <textarea id="vent-textarea" data-i18n-placeholder="vent_placeholder" placeholder="I want to eat because I had a rough day..." 
+                              class="w-full h-20 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs outline-none focus:border-red-400 transition resize-none"></textarea>
+                    <button onclick="burnVentText()" class="w-full bg-slate-900 text-white font-extrabold text-xs py-2.5 rounded-xl hover:bg-slate-800 transition shadow-sm" data-i18n="burn_release">
+                        🔥 Burn and Release Emotion
+                    </button>
+                </div>
+
+                <!-- TOOL 3: Safe Landing Action -->
+                <div class="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-3 text-center">
+                    <div class="space-y-1">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest" data-i18n="had_enough">Had enough?</h4>
+                        <p class="text-xs text-slate-500" data-i18n="had_enough_desc">If the craving passed, congrats! Cancel the delivery to save your wallet and body.</p>
+                    </div>
+                    <button onclick="avertCraving()" class="w-full brand-yellow text-slate-950 font-extrabold py-3 rounded-2xl hover:bg-amber-400 transition shadow-sm" data-i18n="avert_delivery">
+                        ❌ Avert Delivery (Save Money)
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full bg-white border-t border-slate-100 mt-8 py-8 px-4">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs text-slate-500">
+            <div class="space-y-2">
+                <div class="bg-white text-slate-900 font-extrabold px-3 py-1.5 rounded-full text-sm tracking-tight inline-flex items-center gap-1.5 shadow-sm border border-slate-100">
+                    <span>💛</span><span>Craving<span class="brand-green-text">Eats</span></span>
+                </div>
+                <p class="leading-relaxed" data-i18n="footer_blurb">A gentle, science-backed craving interceptor. Not a real delivery service — a self-care tool disguised as one.</p>
+            </div>
+            <div class="space-y-1.5">
+                <h5 class="font-bold text-slate-700 uppercase tracking-widest text-[11px]" data-i18n="footer_support">Support</h5>
+                <p class="flex items-center gap-1.5">📞 <a href="tel:+35929991234" class="hover:text-emerald-600 font-semibold">+359 2 999 1234</a></p>
+                <p class="flex items-center gap-1.5">✉️ <a href="mailto:hello@cravingeats.app" class="hover:text-emerald-600 font-semibold">hello@cravingeats.app</a></p>
+                <p data-i18n="footer_hours">Support available 24/7, every day</p>
+            </div>
+            <div class="space-y-1.5">
+                <h5 class="font-bold text-slate-700 uppercase tracking-widest text-[11px]" data-i18n="footer_follow">Follow the wave</h5>
+                <div class="flex gap-2 pt-1">
+                    <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition cursor-pointer">📷</span>
+                    <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition cursor-pointer">🐦</span>
+                    <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition cursor-pointer">🎵</span>
+                </div>
+            </div>
+        </div>
+        <p class="text-center text-[10px] text-slate-300 mt-6" data-i18n="footer_copyright">© 2026 CravingEats. Made with care for your wellbeing.</p>
+    </footer>
+
+    <!-- FLOATING POPUP: EMERGENCY HELPLINE MODAL -->
+    <div id="help-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white border border-slate-200 p-6 rounded-3xl w-full max-w-md mx-4 shadow-2xl relative space-y-4">
+            <button onclick="toggleHelpModal(false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-lg font-bold">✕</button>
+            <h3 class="text-xl font-extrabold text-red-600 flex items-center gap-2">
+                <span>🚨</span> <span data-i18n="helpline_title">Intervention Helpline</span>
+            </h3>
+            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="helpline_desc">
+                If the urge is feeling completely overwhelming, try a physical distress tolerance strategy (TIPP technique) or reach out to real human support instantly.
+            </p>
+
+            <div class="space-y-3 text-xs">
+                <!-- TIPP TIP -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span class="font-extrabold text-slate-800" data-i18n="tipp_title">❄️ Temperature Change (TIPP):</span>
+                    <p class="text-slate-500 mt-1" data-i18n="tipp_desc">Splash cool water on your face or hands for about 30 seconds. It triggers the mammalian dive reflex to drop high anxiety immediately.</p>
+                </div>
+                <!-- Helplines -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-slate-800" data-i18n="eating_disorder_line">Eating Disorders Support Line</span>
+                        <p class="text-slate-400 mt-0.5 text-[10px]" data-i18n="eating_disorder_line_desc">Anonymously chat with kind support systems</p>
+                    </div>
+                    <a href="https://www.nationaleatingdisorders.org" target="_blank" class="brand-green text-white font-bold py-1 px-3 rounded-lg text-[10px] hover:bg-[#008f73] transition" data-i18n="link_label">Link</a>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-slate-800" data-i18n="crisis_text_line">Crisis Text Line (US/CA/UK)</span>
+                        <p class="text-slate-400 mt-0.5 text-[10px]" data-i18n="crisis_text_line_desc">Text HOME to 741741 to chat with a counselor</p>
+                    </div>
+                    <span class="bg-slate-200 text-slate-700 font-mono font-bold px-2 py-0.5 rounded text-[10px]">741741</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-slate-800" data-i18n="bg_support_line">Bulgaria National Crisis Line</span>
+                        <p class="text-slate-400 mt-0.5 text-[10px]" data-i18n="bg_support_line_desc">Free, 24/7 confidential phone support</p>
+                    </div>
+                    <a href="tel:0800110111" class="bg-slate-200 text-slate-700 font-mono font-bold px-2 py-0.5 rounded text-[10px] hover:bg-slate-300 transition">0800 11011</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIO & ENGINE SYSTEMS -->
+    <script>
+        // Massive database of 18 realistic restaurants matching every single variety and category!
+        const restaurants = [
+            {
+                id: 'frame-raffy',
+                name: 'Frame Raffy Bistro & Grill',
+                emoji: '👑',
+                category: 'burgers',
+                rating: '4.9',
+                fee: '$0.99',
+                time: '12-18 min',
+                image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+                desc: 'The legendary premium dining spot. Highly realistic, succulent comfort platters and sizzling plates designed to crush deep-seated cravings.',
+                menu: [
+                    { 
+                        name: 'Raffy Signature Truffle Burger', 
+                        price: 18.50, 
+                        desc: 'Aged Wagyu beef patty, shaved black truffles, smoked provolone, and caramelized onion jam.',
+                        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Frame Golden Parmesan Crisps', 
+                        price: 8.90, 
+                        desc: 'Delicate, extra-crunchy baked parmesan lace basket with a side of creamy roasted garlic aioli dip.',
+                        image: 'https://images.unsplash.com/photo-1534080391025-a87b4912c240?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Stress-Defeating Wagyu Ribeye Steak', 
+                        price: 34.00, 
+                        desc: 'Perfectly seared hand-cut ribeye dripping with fresh rosemary herb butter, providing heavy-duty grounding comfort.',
+                        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'sushi-lounge',
+                name: 'Sensory Sushi Lounge',
+                emoji: '🍣',
+                category: 'sushi',
+                rating: '4.9',
+                fee: '$1.99',
+                time: '15-20 min',
+                image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80',
+                desc: 'Premium hand-rolled sushi offering satisfying crisp textures and rich sensory stimulation.',
+                menu: [
+                    { 
+                        name: 'Boredom Crunch Shrimp Tempura', 
+                        price: 14.50, 
+                        desc: 'Extra crispy roll layered with deep, satisfying sensory validation.',
+                        image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Anxious Wasabi Salmon Roll', 
+                        price: 12.20, 
+                        desc: 'A quick spicy physical shock to ground your current panic.',
+                        image: 'https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'tokyo-drift-sushi',
+                name: 'Tokyo Drift Sushi Bar',
+                emoji: '🎏',
+                category: 'sushi',
+                rating: '4.7',
+                fee: '$2.50',
+                time: '18-25 min',
+                image: 'https://images.unsplash.com/photo-1583623025817-d180a2221d0a?auto=format&fit=crop&w=600&q=80',
+                desc: 'Street-style modern sushi bites offering a quick savory spark to shake off high-speed anxiety.',
+                menu: [
+                    {
+                        name: 'Speedway Spicy Tuna Roll',
+                        price: 11.50,
+                        desc: 'Chopped spicy tuna with chili crisp and crunchy panko shavings.',
+                        image: 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Drift Volcano Roll Platter',
+                        price: 15.90,
+                        desc: 'Baked crab salad poured over California rolls with sweet eel drizzle.',
+                        image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'serotonin-burger',
+                name: 'Midnight Serotonin Diner',
+                emoji: '🍔',
+                category: 'burgers',
+                rating: '4.8',
+                fee: '$2.49',
+                time: '20-25 min',
+                image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
+                desc: 'Comfort burgers made to temporarily soothe empty spaces and lonely thoughts.',
+                menu: [
+                    { 
+                        name: 'Stress-Reliever Double Cheeseburger', 
+                        price: 16.90, 
+                        desc: 'Packed with warm cheese and instant temporary satisfaction.',
+                        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Exhausted Crispy French Fry Box', 
+                        price: 6.50, 
+                        desc: 'Crunchy golden potatoes to eat while staring blankly into space.',
+                        image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'grounded-greens',
+                name: 'Grounded Greenery & Bowls',
+                emoji: '🥗',
+                category: 'salads',
+                rating: '4.9',
+                fee: '$1.49',
+                time: '12-15 min',
+                image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
+                desc: 'Nourishing, earthy salads and plant power to ground emotional storms.',
+                menu: [
+                    { 
+                        name: 'Overwhelmed Caesar Salad', 
+                        price: 12.50, 
+                        desc: 'Crisp romaine lettuce, rustic baked croutons, and rich dairy dressing to settle nerves.',
+                        image: 'https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Breathe Deeply Quinoa Bowl', 
+                        price: 13.80, 
+                        desc: 'Fluffy quinoa, sweet roasted potatoes, fresh greens, and calming tahini dressing.',
+                        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'crisp-crunch-greens',
+                name: 'The Crisp Crunch Green Bar',
+                emoji: '🌿',
+                category: 'salads',
+                rating: '4.8',
+                fee: '$1.00',
+                time: '10-14 min',
+                image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80',
+                desc: 'Ultra-fresh leafy greens and garden components designed to clear brain fog and re-energize your system.',
+                menu: [
+                    {
+                        name: 'Detoxifying Avocado Crunch Salad',
+                        price: 11.90,
+                        desc: 'Buttery sliced avocados, toasted seeds, microgreens, and a zesty cold-pressed lemon dressing.',
+                        image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Mind-Clearing Mediterranean Salad',
+                        price: 10.50,
+                        desc: 'Tender baby spinach, sun-ripened cherry tomatoes, kalamata olives, and fresh organic feta squares.',
+                        image: 'https://images.unsplash.com/photo-1607532941433-304659e8198a?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'mental-taco',
+                name: "Amigo's Mental Taco Truck",
+                emoji: '🌮',
+                category: 'tacos',
+                rating: '4.8',
+                fee: '$2.00',
+                time: '14-18 min',
+                image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80',
+                desc: 'Spicy salsa elements and warm tortillas crafted to spark your taste buds.',
+                menu: [
+                    { 
+                        name: 'Spicy Anger-Release Carnitas Tacos', 
+                        price: 11.00, 
+                        desc: 'Slow-cooked pork with spicy fire salsa to safely discharge emotional heat.',
+                        image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Comforting Quesabirria Taco Trio', 
+                        price: 14.50, 
+                        desc: 'Cheesy, crisp birria tacos served with warm rich dipping consomme.',
+                        image: 'https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'taco-fiesta-bar',
+                name: 'Taco Fiesta Cantina',
+                emoji: '🪅',
+                category: 'tacos',
+                rating: '4.6',
+                fee: '$2.20',
+                time: '15-20 min',
+                image: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=600&q=80',
+                desc: 'Lively, colorful loaded Nacho plates and soft-shell corn tacos designed for heavy-duty emotional celebration.',
+                menu: [
+                    {
+                        name: 'Impulse loaded Nacho Stack',
+                        price: 12.90,
+                        desc: 'A massive hill of crispy tortilla chips drenched in melted pepperjack cheese, guacamole, and cilantro sour cream.',
+                        image: 'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Calming Roasted Guacamole & Chips',
+                        price: 6.90,
+                        desc: 'Freshly mashed whole avocados seasoned with lime salt, served alongside warm, sea-salted chips.',
+                        image: 'https://images.unsplash.com/photo-1574783756214-2503a1a226bc?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'crispy-cluck',
+                name: 'Crispy Cluck & Wings',
+                emoji: '🍗',
+                category: 'chicken',
+                rating: '4.7',
+                fee: '$2.20',
+                time: '15-22 min',
+                image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80',
+                desc: 'Satisfyingly crunchy wings and fried tenders to ground an anxious hand.',
+                menu: [
+                    { 
+                        name: 'Exhausted Buffalo Wings Basket', 
+                        price: 13.50, 
+                        desc: 'Juicy wings tossed in bold, fiery buffalo sauce to wake up tired taste buds.',
+                        image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Boredom-Busting Garlic Parm Tenders', 
+                        price: 12.00, 
+                        desc: 'Thick, hand-breaded chicken breast tenders tossed in creamy garlic parmesan glaze.',
+                        image: 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'cluck-cluck-wings',
+                name: 'The Wing Master Coop',
+                emoji: '🐔',
+                category: 'chicken',
+                rating: '4.8',
+                fee: '$1.80',
+                time: '12-18 min',
+                image: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?auto=format&fit=crop&w=600&q=80',
+                desc: 'Sticky, sweet, and extra spicy fried wing segments built to deliver immediate savory comfort.',
+                menu: [
+                    {
+                        name: 'Anxiety-Melting Sweet Chili Wings',
+                        price: 13.00,
+                        desc: 'Deep-fried wings tossed in sweet chili sauce, crushed peanuts, and fresh scallions.',
+                        image: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Comforting Southern Crisp Strips',
+                        price: 11.50,
+                        desc: 'Buttermilk soaked strips battered in secret herbs and deep fried to a rich golden jacket.',
+                        image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'carby-pasta',
+                name: 'Bella Ciao Carby Pasta',
+                emoji: '🍝',
+                category: 'pasta',
+                rating: '4.8',
+                fee: '$1.80',
+                time: '18-24 min',
+                image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80',
+                desc: 'Steaming plates of comforting Italian pasta acting as an emotional shield.',
+                menu: [
+                    { 
+                        name: 'Decidophobia Spaghetti Bolognese', 
+                        price: 15.50, 
+                        desc: 'Rich, slow-simmered beef and tomato ragu over soft strands of spaghetti.',
+                        image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Lonely Hearts Fettuccine Alfredo', 
+                        price: 16.00, 
+                        desc: 'Ribbons of fettuccine swirled in a thick, velvety real butter and cream sauce.',
+                        image: 'https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'trattoria-emotion',
+                name: 'Trattoria Emotion Pasta',
+                emoji: '🇮🇹',
+                category: 'pasta',
+                rating: '4.9',
+                fee: '$2.00',
+                time: '20-25 min',
+                image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80',
+                desc: 'Authentic stone-oven baked bakes and fresh basil pesto creations designed for emotional warmth.',
+                menu: [
+                    {
+                        name: 'Comfort Blanket Baked Lasagna',
+                        price: 17.50,
+                        desc: 'Oven baked layered sheets of pasta, slow-simmered beef ragu, fresh ricotta, and melted mozzarella.',
+                        image: 'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Anxiety-Reducing Basil Pesto Penne',
+                        price: 14.00,
+                        desc: 'Al dente penne noodles tossed in freshly ground basil, pine nuts, garlic, and cold-pressed olive oil.',
+                        image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'pizza-lab',
+                name: 'Crave & Wave Pizza Lab',
+                emoji: '🍕',
+                category: 'pizza',
+                rating: '4.6',
+                fee: 'Free',
+                time: '25-30 min',
+                image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80',
+                desc: 'Sizzling wood-fired cheese pizza slices to wrap you in warmth.',
+                menu: [
+                    { 
+                        name: 'Decidophobia Margherita Pizza', 
+                        price: 13.90, 
+                        desc: 'The default simple option for when deciding what to do is too scary.',
+                        image: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Heavy Heart Pepperoni Feast', 
+                        price: 16.50, 
+                        desc: 'Spicy pepperoni slices to add flavor when everything else feels completely bland.',
+                        image: 'https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'neapolitan-crust-pizza',
+                name: 'Neapolitan Fire & Crust',
+                emoji: '🌋',
+                category: 'pizza',
+                rating: '4.8',
+                fee: '$1.00',
+                time: '18-22 min',
+                image: 'https://images.unsplash.com/photo-1571066811602-71683a3f680d?auto=format&fit=crop&w=600&q=80',
+                desc: 'Leopard-spotted puffy sourdough crusts topped with rich, simple, and satisfying ingredients.',
+                menu: [
+                    {
+                        name: 'Boredom-Crushing Veggie Pizza',
+                        price: 15.00,
+                        desc: 'Fresh cherry tomatoes, bell peppers, shaved red onion, mushrooms, black olives, and fresh basil.',
+                        image: 'https://images.unsplash.com/photo-1571066811602-71683a3f680d?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Warm Embrace Garlic Knots',
+                        price: 5.50,
+                        desc: 'Buttery bread dough loops drenched in minced garlic, olive oil, and parsley, served hot.',
+                        image: 'https://images.unsplash.com/photo-1544982503-9f984c14501a?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'crisp-appetizers',
+                name: 'The Golden Bite Tapas',
+                emoji: '🍟',
+                category: 'appetizers',
+                rating: '4.8',
+                fee: '$1.50',
+                time: '10-15 min',
+                image: 'https://images.unsplash.com/photo-1534080391025-a87b4912c240?auto=format&fit=crop&w=600&q=80',
+                desc: 'Bite-sized visual and crunchy comforts to keep your hands and mouth safely occupied.',
+                menu: [
+                    { 
+                        name: 'Stressed-Out Mozzarella Sticks', 
+                        price: 8.50, 
+                        desc: 'Gooey, stretchy, deep-fried breaded cheese blocks with tangy marinara dip.',
+                        image: 'https://images.unsplash.com/photo-1531749668029-2db88e4b76ce?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Panic-Button Jalapeño Poppers', 
+                        price: 9.00, 
+                        desc: 'Spicy peppers filled with cream cheese and fried to a deep golden shield.',
+                        image: 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'finger-food-factory',
+                name: 'Finger Food Factory',
+                emoji: '🥨',
+                category: 'appetizers',
+                rating: '4.7',
+                fee: '$1.99',
+                time: '12-16 min',
+                image: 'https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&w=600&q=80',
+                desc: 'Comforting, salty side baskets and appetizers designed for distraction and physical grounding.',
+                menu: [
+                    {
+                        name: 'Boredom Loaded Potato Skins',
+                        price: 9.90,
+                        desc: 'Hollowed baked Idaho potatoes loaded with melted cheddar, green onions, and plant-based bacon crumbles.',
+                        image: 'https://images.unsplash.com/photo-1603052875302-d376b7c0638a?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Anxiety-Relieving Garlic Soft Pretzels',
+                        price: 6.90,
+                        desc: 'Freshly baked soft Bavarian pretzels dusted with coarse salt, served with hot beer cheese dip.',
+                        image: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'zen-ramen',
+                name: 'Zen Bowl Ramen & Gyoza',
+                emoji: '🍜',
+                category: 'ramen',
+                rating: '4.9',
+                fee: '$2.00',
+                time: '15-20 min',
+                image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80',
+                desc: 'Steaming, rich broth bowls to deeply warm you from the inside out.',
+                menu: [
+                    { 
+                        name: 'Calming Pork Tonkotsu Ramen', 
+                        price: 15.90, 
+                        desc: 'Silky, rich pork broth with springy noodles, soft-boiled egg, and pork chashu.',
+                        image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Grounded Vegan Miso Ramen', 
+                        price: 14.50, 
+                        desc: 'Earthy miso broth packed with tofu blocks, sweet corn, woodear mushrooms, and nori.',
+                        image: 'https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'shifu-ramen-house',
+                name: 'Master Shifu Ramen',
+                emoji: '🐼',
+                category: 'ramen',
+                rating: '4.8',
+                fee: '$2.20',
+                time: '18-24 min',
+                image: 'https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=600&q=80',
+                desc: 'Slow-boiled specialty Asian broths and crispy pan-fried gyozas serving ancient herbal comfort.',
+                menu: [
+                    {
+                        name: 'Boredom-Relieving Chicken Gyoza',
+                        price: 7.90,
+                        desc: 'Crispy pan-seared pork and chicken dumplings served with garlic-soy dipping sauce.',
+                        image: 'https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Stress-Calming Spicy Sesame Shoyu',
+                        price: 14.90,
+                        desc: 'Clear soy-sauce broth swirled with warm sesame paste, sliced chicken breast, scallions, and bamboo shoots.',
+                        image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'boba-escape',
+                name: 'Boba & Bubble Escape',
+                emoji: '🧋',
+                category: 'bubble-tea',
+                rating: '4.7',
+                fee: '$0.99',
+                time: '10-15 min',
+                image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=80',
+                desc: 'Sweet, chewy, distracting boba drinks to sip when choices feel way too exhausting.',
+                menu: [
+                    { 
+                        name: 'Sweet Loneliness Classic Boba', 
+                        price: 6.50, 
+                        desc: 'Chewy tapioca pearls representing all your unexpressed thoughts.',
+                        image: 'https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Impulsive Matcha Latte Bubble Tea', 
+                        price: 7.20, 
+                        desc: 'Whipped sweet organic matcha green tea with creamy dairy and black brown sugar tapiocas.',
+                        image: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'detox-juice-boba',
+                name: 'The Detox Cold Press & Boba',
+                emoji: '🍓',
+                category: 'bubble-tea',
+                rating: '4.8',
+                fee: '$1.49',
+                time: '12-16 min',
+                image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80',
+                desc: 'Refreshing, organic cold-pressed wellness juice combinations and sweet real fruit jellies to refresh your state.',
+                menu: [
+                    {
+                        name: 'Nostalgic Strawberry Fruit Tea',
+                        price: 6.80,
+                        desc: 'Chilled sweet strawberry black tea containing crystal agar jellies and sliced fresh berries.',
+                        image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Stress-Detox Mango Green Tea',
+                        price: 6.50,
+                        desc: 'Chilled jasmine green tea sweetened with real mango puree and popping passionfruit pearls.',
+                        image: 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'sweet-tooth',
+                name: 'Midnight Sweet Tooth Bakery',
+                emoji: '🍰',
+                category: 'desserts',
+                rating: '4.9',
+                fee: '$3.00',
+                time: '12-18 min',
+                image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=600&q=80',
+                desc: 'Decadent, rich, and deeply nostalgic sweets that act as immediate sensory hugs.',
+                menu: [
+                    { 
+                        name: 'Dopamine Lava Melt Cake', 
+                        price: 8.90, 
+                        desc: 'Warm chocolate centers that mimic the warm rush of cozy safety.',
+                        image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=300&q=80'
+                    },
+                    { 
+                        name: 'Nostalgic Warm Apple Pie', 
+                        price: 7.50, 
+                        desc: 'Tastes like being small and not having any heavy responsibilities.',
+                        image: 'https://images.unsplash.com/photo-1519869325930-281384150729?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Creamy Strawberry Cheesecake Slice',
+                        price: 8.00,
+                        desc: 'Rich Graham cracker crust with a velvety cream cheese batter and strawberry syrup glaze.',
+                        image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'sunrise-brunch',
+                name: 'Sunrise Comfort Brunch',
+                emoji: '🥞',
+                category: 'breakfast',
+                rating: '4.8',
+                fee: '$1.49',
+                time: '15-20 min',
+                image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=600&q=80',
+                desc: 'Fluffy stacks and slow mornings, plated up whenever the day feels heavy.',
+                menu: [
+                    {
+                        name: 'Soft Reset Buttermilk Pancakes',
+                        price: 10.90,
+                        desc: 'A tall stack drizzled in warm maple syrup with a pat of melting butter.',
+                        image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Grounding Avocado Toast Duo',
+                        price: 9.50,
+                        desc: 'Sourdough toast, smashed avocado, chili flakes, and a soft poached egg.',
+                        image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'golden-yolk-diner',
+                name: 'Golden Yolk Diner',
+                emoji: '🍳',
+                category: 'breakfast',
+                rating: '4.7',
+                fee: '$2.00',
+                time: '18-22 min',
+                image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=600&q=80',
+                desc: 'Classic diner-style breakfast plates for when you need something familiar.',
+                menu: [
+                    {
+                        name: 'Familiar Comfort Breakfast Plate',
+                        price: 13.50,
+                        desc: 'Two eggs any style, crispy hash browns, and warm buttered toast.',
+                        image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Slow Morning Belgian Waffle',
+                        price: 11.00,
+                        desc: 'Golden waffle with whipped cream and a small pitcher of syrup on the side.',
+                        image: 'https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'third-wave-coffee',
+                name: 'Third Wave Coffee Co.',
+                emoji: '☕',
+                category: 'coffee',
+                rating: '4.9',
+                fee: '$0.99',
+                time: '8-12 min',
+                image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
+                desc: 'Slow-brewed coffee and a quiet moment to just sit with your hands wrapped around a warm cup.',
+                menu: [
+                    {
+                        name: 'Steady Hands Oat Milk Latte',
+                        price: 5.20,
+                        desc: 'Smooth espresso with steamed oat milk, lightly sweet and warm.',
+                        image: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Slow Down Cinnamon Cortado',
+                        price: 4.50,
+                        desc: 'A short, rich espresso balanced with warm milk and a dusting of cinnamon.',
+                        image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'cloud-nine-cafe',
+                name: 'Cloud Nine Café',
+                emoji: '🌥️',
+                category: 'coffee',
+                rating: '4.8',
+                fee: 'Free',
+                time: '10-14 min',
+                image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80',
+                desc: 'Cozy corner café pours and soft pastries for a gentle little pause in your day.',
+                menu: [
+                    {
+                        name: 'Gentle Pause Vanilla Cappuccino',
+                        price: 4.90,
+                        desc: 'Silky microfoam over espresso with a hint of vanilla syrup.',
+                        image: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Warm Hug Almond Croissant',
+                        price: 5.50,
+                        desc: 'Buttery, flaky croissant filled with sweet almond cream, lightly toasted.',
+                        image: 'https://images.unsplash.com/photo-1509365465985-25d11c17e812?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            },
+            {
+                id: 'gelato-paradiso',
+                name: 'Gelato Heaven & Waffles',
+                emoji: '🍨',
+                category: 'desserts',
+                rating: '4.8',
+                fee: '$2.50',
+                time: '10-15 min',
+                image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=600&q=80',
+                desc: 'Chilled authentic Italian gelatos and fresh sweet waffles to bring sugar-coated peace to your mind.',
+                menu: [
+                    {
+                        name: 'Anxiety Crushing Sugar Waffles',
+                        price: 9.00,
+                        desc: 'Thick hot Belgian waffles topped with powdered sugar and a mountain of airy whipped cream.',
+                        image: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=300&q=80'
+                    },
+                    {
+                        name: 'Tension-Release Chocolate Gelato Tub',
+                        price: 7.00,
+                        desc: 'Two massive scoops of rich, dense Belgian dark chocolate gelato to trigger slow happy hormones.',
+                        image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=300&q=80'
+                    }
+                ]
+            }
+        ];
+
+        // State Machine
+        let cart = [];
+        let address = '';
+        let stats = {
+            moneySaved: 0.00,
+            wavesSurfed: 0
+        };
+        let soundEnabled = true;
+        let trackingSecondsLeft = 900; // 15 mins default
+        let trackingInterval = null;
+        let currentCategoryFilter = 'all';
+        let tipAmount = 0;
+        let promoDiscount = 0;
+        let addressIsPlaceholder = true;
+        let currentLang = 'en';
+
+        // Web Audio Synthesizers (no external dependencies)
+        let audioCtx = null;
+        let ambientOsc = null;
+        let ambientGain = null;
+
+        // Riders shown on the tracking screen (rotates for realism)
+        const riders = [
+            { name: 'Ivo Petrov', phone: '+359891122334', avatar: '🧑\u200d🦱' },
+            { name: 'Milena Georgieva', phone: '+359881567234', avatar: '👩\u200d🦰' },
+            { name: 'Stoyan Dimitrov', phone: '+359877345891', avatar: '🧔' },
+            { name: 'Elena Kirilova', phone: '+359893214567', avatar: '👩' }
+        ];
+        let currentRider = riders[0];
+
+        // Generates a stable, realistic-looking BG phone number per restaurant id (no data collected, purely cosmetic)
+        function phoneForRestaurant(id) {
+            const hash = Math.abs(hashId(id));
+            const part1 = 880 + (hash % 20);
+            const part2 = String(100000 + (hash % 900000)).slice(0, 6);
+            return { display: `+359 ${part1} ${part2.slice(0,3)} ${part2.slice(3)}`, tel: `+359${part1}${part2}` };
+        }
+
+        window.onload = function() {
+            // Load stats from localStorage if they exist
+            if (localStorage.getItem('craving_stats')) {
+                stats = JSON.parse(localStorage.getItem('craving_stats'));
+            }
+            const savedLang = localStorage.getItem('craving_lang');
+            applyLanguage(savedLang === 'bg' ? 'bg' : 'en');
+            updateGlobalStatsDisplay();
+            initBreathingTimer();
+        };
+
+        // ===================== LANGUAGE / i18n ENGINE =====================
+        const translations = {
+            en: {
+                stats_saved_label: 'Saved:',
+                stats_waves_label: 'Waves:',
+                header_address_placeholder: 'Select Delivery Address at checkout',
+                hero_tag: 'Mindful Intervention',
+                hero_title: 'Feeling an intense craving hitting you right now?',
+                hero_desc: "Browse your comfort options, add your favorite treats to the cart, and let's intercept those binging impulses with science!",
+                craving_question: 'What are you craving right now?',
+                cat_all: 'All', cat_burgers: 'Burgers', cat_sushi: 'Sushi', cat_salads: 'Salads',
+                cat_tacos: 'Tacos', cat_chicken: 'Chicken', cat_pasta: 'Pasta', cat_pizza: 'Pizza',
+                cat_appetizers: 'Appetizers', cat_ramen: 'Ramen', cat_drinks: 'Drinks', cat_desserts: 'Sweets',
+                cat_breakfast: 'Breakfast', cat_coffee: 'Coffee',
+                featured_cafes: 'Featured Craving Cafes',
+                showing_label: 'Showing',
+                back_to_stores: 'Back to Stores',
+                menu_dishes: 'Menu Dishes',
+                fee_label: 'Fee:',
+                add_label: 'Add +',
+                checkout_basket: 'Your Checkout Basket',
+                cancel: 'Cancel',
+                subtotal: 'Subtotal',
+                delivery_fee: 'Delivery Fee',
+                rider_tip: 'Rider Tip',
+                total_bill: 'Total Bill (To Save)',
+                add_tip: 'Add a Tip for Your Rider',
+                promo_placeholder: 'Promo code',
+                apply: 'Apply',
+                enter_address: '📍 Enter Delivery Address',
+                enter_address_desc: 'We need your real location to coordinate with the nearest virtual delivery rider.',
+                address_placeholder: 'e.g., 123 Sunshine Street, Apt 4B',
+                support_call_prompt: '📞 Need help placing your order? Call support at',
+                place_order: 'Place Delivery Order',
+                courier_status: 'Courier Status',
+                estimated_delivery: 'Estimated Delivery',
+                rider_scooter: '· Yellow Scooter · Plate CA 4471 KH',
+                tracking_route_to: 'Tracking Route to:',
+                craving_wave_title: 'The Craving Wave (Urge Surfing)',
+                craving_wave_desc: 'Intense emotional food cravings generally peak and subside in <strong>15 minutes</strong>. Pretend your courier is bringing your exact cart, and use this interactive toolkit to "surf" the wave until the delivery window collapses.',
+                sos_toolkit: '🚨 Emergency SOS Toolkit',
+                breathe_ground: 'Breathe & Ground',
+                breathe_ground_desc: 'Sync your breathing to slow down your nervous system.',
+                breathe_in: 'Breathe In',
+                breathe_hold: 'Hold',
+                breathe_out: 'Breathe Out',
+                vent_title: 'Vent & Dissolve triggers',
+                vent_desc: 'Write down what emotion sparked this craving (Stress? Boredom? Loneliness?), then incinerate it.',
+                vent_placeholder: 'I want to eat because I had a rough day...',
+                burn_release: '🔥 Burn and Release Emotion',
+                had_enough: 'Had enough?',
+                had_enough_desc: 'If the craving passed, congrats! Cancel the delivery to save your wallet and body.',
+                avert_delivery: '❌ Avert Delivery (Save Money)',
+                helpline_title: 'Intervention Helpline',
+                helpline_desc: 'If the urge is feeling completely overwhelming, try a physical distress tolerance strategy (TIPP technique) or reach out to real human support instantly.',
+                tipp_title: '❄️ Temperature Change (TIPP):',
+                tipp_desc: 'Splash cool water on your face or hands for about 30 seconds. It triggers the mammalian dive reflex to drop high anxiety immediately.',
+                eating_disorder_line: 'Eating Disorders Support Line',
+                eating_disorder_line_desc: 'Anonymously chat with kind support systems',
+                link_label: 'Link',
+                crisis_text_line: 'Crisis Text Line (US/CA/UK)',
+                crisis_text_line_desc: 'Text HOME to 741741 to chat with a counselor',
+                bg_support_line: 'Bulgaria National Crisis Line',
+                bg_support_line_desc: 'Free, 24/7 confidential phone support',
+                footer_blurb: 'A gentle, science-backed craving interceptor. Not a real delivery service — a self-care tool disguised as one.',
+                footer_support: 'Support',
+                footer_hours: 'Support available 24/7, every day',
+                footer_follow: 'Follow the wave',
+                footer_copyright: '© 2026 CravingEats. Made with care for your wellbeing.',
+                bgm_off: '🎵 Relaxing Waves Music: OFF',
+                bgm_on: '🎵 Relaxing Waves Music: ON',
+                toast_basket_empty: 'Your basket is currently empty!',
+                toast_need_address: 'Please specify a delivery address to complete your order!',
+                toast_vent_empty: 'Write down your feelings before burning them.',
+                toast_vent_burned: '🔥 Stress triggers vaporized! Stay strong.',
+                toast_promo_applied: '🎟️ Promo applied! 10% off your total.',
+                toast_promo_invalid: "That code doesn't look right — try SURFWAVE10.",
+                msg_courier_prep: 'Rider cooking/preparing your mental surge...',
+                msg_courier_transit: 'Courier traversing the wave near you...',
+                msg_courier_almost: 'Almost arrived! Surfs up! Steady your breath!',
+                msg_courier_done: 'Delivery window collapsed! You surfed it!',
+                alert_success: '🎉 Success! You rode out the urge! Your mind cleared and you saved a total of',
+                alert_avert_confirm: 'Cancel order & save your body and wallet right now? You win immediately!',
+                alert_avert_success: '🎯 Order Cancelled! You conquered the urge, saved',
+                alert_avert_success_2: 'and preserved your wellness! Perfect job.'
+            },
+            bg: {
+                stats_saved_label: 'Спестени:',
+                stats_waves_label: 'Вълни:',
+                header_address_placeholder: 'Изберете адрес за доставка при плащане',
+                hero_tag: 'Внимателна интервенция',
+                hero_title: 'Усещаш ли силно желание за храна точно сега?',
+                hero_desc: 'Разгледай успокояващите опции, добави любимите си лакомства в количката и нека прекъснем импулса с малко наука!',
+                craving_question: 'За какво копнееш точно сега?',
+                cat_all: 'Всички', cat_burgers: 'Бургери', cat_sushi: 'Суши', cat_salads: 'Салати',
+                cat_tacos: 'Тако', cat_chicken: 'Пиле', cat_pasta: 'Паста', cat_pizza: 'Пица',
+                cat_appetizers: 'Предястия', cat_ramen: 'Рамен', cat_drinks: 'Напитки', cat_desserts: 'Сладки',
+                cat_breakfast: 'Закуска', cat_coffee: 'Кафе',
+                featured_cafes: 'Препоръчани заведения',
+                showing_label: 'Показва',
+                back_to_stores: 'Назад към заведенията',
+                menu_dishes: 'Ястия от менюто',
+                fee_label: 'Такса:',
+                add_label: 'Добави +',
+                checkout_basket: 'Твоята количка',
+                cancel: 'Отказ',
+                subtotal: 'Междинна сума',
+                delivery_fee: 'Такса доставка',
+                rider_tip: 'Бакшиш за куриера',
+                total_bill: 'Обща сметка (за спестяване)',
+                add_tip: 'Остави бакшиш на куриера',
+                promo_placeholder: 'Промо код',
+                apply: 'Приложи',
+                enter_address: '📍 Въведи адрес за доставка',
+                enter_address_desc: 'Нужна ни е локацията ти, за да координираме с най-близкия виртуален куриер.',
+                address_placeholder: 'напр. ул. Слънчева 123, ап. 4Б',
+                support_call_prompt: '📞 Нужна ти е помощ с поръчката? Обади се на',
+                place_order: 'Направи поръчка за доставка',
+                courier_status: 'Статус на куриера',
+                estimated_delivery: 'Очаквано време',
+                rider_scooter: '· Жълт скутер · Рег. № CA 4471 KH',
+                tracking_route_to: 'Проследяване до:',
+                craving_wave_title: 'Вълната на желанието (сърфиране на импулса)',
+                craving_wave_desc: 'Силните емоционални копнежи за храна обикновено достигат връх и отшумяват за <strong>15 минути</strong>. Представи си, че куриерът носи точно твоята количка, и използвай тези инструменти, за да "изсърфираш" вълната, докато прозорецът за доставка изтече.',
+                sos_toolkit: '🚨 Спешен SOS комплект',
+                breathe_ground: 'Дишай и се закотви',
+                breathe_ground_desc: 'Синхронизирай дишането си, за да успокоиш нервната си система.',
+                breathe_in: 'Вдишай',
+                breathe_hold: 'Задръж',
+                breathe_out: 'Издишай',
+                vent_title: 'Изкажи и разтвори импулса',
+                vent_desc: 'Запиши каква емоция предизвика този копнеж (Стрес? Скука? Самота?), после го изгори.',
+                vent_placeholder: 'Искам да ям, защото имах тежък ден...',
+                burn_release: '🔥 Изгори и освободи емоцията',
+                had_enough: 'Достатъчно ли беше?',
+                had_enough_desc: 'Ако желанието премина, браво! Откажи доставката, за да спестиш пари и погрижиш се за тялото си.',
+                avert_delivery: '❌ Отмени доставката (Спести пари)',
+                helpline_title: 'Спешна помощна линия',
+                helpline_desc: 'Ако импулсът е напълно непреодолим, опитай техника за физическа толерантност към стрес (TIPP) или се свържи с реален човек веднага.',
+                tipp_title: '❄️ Смяна на температурата (TIPP):',
+                tipp_desc: 'Поплискай хладка вода на лицето или ръцете си за около 30 секунди. Това задейства естествен рефлекс, който бързо намалява тревожността.',
+                eating_disorder_line: 'Линия за хранителни разстройства',
+                eating_disorder_line_desc: 'Анонимен разговор с внимателна подкрепа',
+                link_label: 'Линк',
+                crisis_text_line: 'Крайзисна линия (текст, US/CA/UK)',
+                crisis_text_line_desc: 'Изпрати HOME на 741741, за да говориш с консултант',
+                bg_support_line: 'Национална телефонна линия за кризи',
+                bg_support_line_desc: 'Безплатна, поверителна подкрепа 24/7',
+                footer_blurb: 'Внимателен, научно обоснован инструмент за прекъсване на импулси. Не е истинска услуга за доставка — а инструмент за грижа за себе си, маскиран като такава.',
+                footer_support: 'Поддръжка',
+                footer_hours: 'Поддръжка на разположение 24/7, всеки ден',
+                footer_follow: 'Последвай вълната',
+                footer_copyright: '© 2026 CravingEats. Направено с грижа за твоето благополучие.',
+                bgm_off: '🎵 Успокояваща музика: ИЗКЛ.',
+                bgm_on: '🎵 Успокояваща музика: ВКЛ.',
+                toast_basket_empty: 'Количката ти в момента е празна!',
+                toast_need_address: 'Моля, посочи адрес за доставка, за да завършиш поръчката!',
+                toast_vent_empty: 'Запиши чувствата си, преди да ги изгориш.',
+                toast_vent_burned: '🔥 Стресовите тригери изпариха се! Дръж се!',
+                toast_promo_applied: '🎟️ Промо кодът е приложен! 10% отстъпка от общата сума.',
+                toast_promo_invalid: 'Този код не изглежда валиден — опитай SURFWAVE10.',
+                msg_courier_prep: 'Куриерът подготвя твоя мисловен прилив...',
+                msg_courier_transit: 'Куриерът пресича вълната близо до теб...',
+                msg_courier_almost: 'Почти пристигна! Дръж се! Успокой дишането си!',
+                msg_courier_done: 'Прозорецът за доставка изтече! Ти изсърфира вълната!',
+                alert_success: '🎉 Успех! Ти изсърфира импулса! Умът ти се проясни и спести общо',
+                alert_avert_confirm: 'Отказваш поръчката и спестяваш за тялото и портфейла си точно сега? Печелиш веднага!',
+                alert_avert_success: '🎯 Поръчката е отказана! Ти победи импулса, спести',
+                alert_avert_success_2: 'и се погрижи за благополучието си! Отлична работа.'
+            }
+        };
+
+        function t(key) {
+            return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+        }
+
+        function applyLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('craving_lang', lang);
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.innerHTML = t(key);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.setAttribute('placeholder', t(key));
+            });
+
+            // Toggle button active states
+            document.getElementById('lang-btn-en').className = `px-2.5 py-1.5 rounded-full transition ${lang === 'en' ? 'bg-slate-900 text-white' : 'text-slate-500'}`;
+            document.getElementById('lang-btn-bg').className = `px-2.5 py-1.5 rounded-full transition ${lang === 'bg' ? 'bg-slate-900 text-white' : 'text-slate-500'}`;
+
+            // Fields that depend on dynamic state, not plain data-i18n swaps
+            if (addressIsPlaceholder) {
+                document.getElementById('header-address').innerText = t('header_address_placeholder');
+            }
+            document.getElementById('bgm-btn').innerText = ambientOsc ? t('bgm_on') : t('bgm_off');
+            document.getElementById('filtered-label').innerText = `${t('showing_label')} ${categoryLabel(currentCategoryFilter)}`;
+
+            // Re-render any currently visible dynamic lists so their labels pick up the new language
+            renderRestaurants();
+            renderCart();
+        }
+
+        function categoryLabel(cat) {
+            return t(`cat_${cat}`);
+        }
+
+        // Render Restaurants List
+        function renderRestaurants() {
+            const grid = document.getElementById('restaurants-grid');
+            grid.innerHTML = '';
+
+            const filtered = currentCategoryFilter === 'all' 
+                ? restaurants 
+                : restaurants.filter(r => r.category === currentCategoryFilter);
+
+            const favorites = JSON.parse(localStorage.getItem('craving_favorites') || '[]');
+
+            filtered.forEach(r => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition duration-200 cursor-pointer overflow-hidden flex flex-col sm:flex-row items-stretch gap-0 relative";
+
+                const isFav = favorites.includes(r.id);
+                const reviewCount = 80 + (Math.abs(hashId(r.id)) % 420);
+
+                card.innerHTML = `
+                    <div class="sm:w-1/3 h-40 sm:h-auto relative min-h-[120px]">
+                        <img class="w-full h-full object-cover" src="${r.image}" alt="${r.name}" onerror="this.src='https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=400&q=80'">
+                        <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm shadow-sm flex items-center justify-center">
+                            ${r.emoji}
+                        </div>
+                        <button class="fav-btn absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center text-sm hover:scale-105 transition" data-id="${r.id}">
+                            ${isFav ? '❤️' : '🤍'}
+                        </button>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between cursor-pointer" data-open="${r.id}">
+                        <div class="space-y-1">
+                            <h3 class="font-extrabold text-base text-slate-900 transition hover:text-emerald-600">${r.name}</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed">${r.desc}</p>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs font-bold text-slate-400 pt-2 flex-wrap">
+                            <span class="text-amber-500">★ ${r.rating}</span>
+                            <span class="font-normal text-slate-300">(${reviewCount})</span>
+                            <span>•</span>
+                            <span>${t('fee_label')} ${r.fee}</span>
+                            <span>•</span>
+                            <span>${r.time}</span>
+                        </div>
+                    </div>
+                `;
+
+                card.querySelector('[data-open]').addEventListener('click', () => openRestaurantMenu(r));
+                card.querySelector('.fav-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(r.id);
+                });
+
+                grid.appendChild(card);
+            });
+
+            document.getElementById('filtered-label').innerText = `${t('showing_label')} ${categoryLabel(currentCategoryFilter)}`;
+        }
+
+        // Simple deterministic hash for stable "fake" numbers (reviews, phone) per id
+        function hashId(id) {
+            let hash = 0;
+            for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+            return hash;
+        }
+
+        function toggleFavorite(id) {
+            let favorites = JSON.parse(localStorage.getItem('craving_favorites') || '[]');
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(f => f !== id);
+            } else {
+                favorites.push(id);
+                playBeep(700, 0.06);
+            }
+            localStorage.setItem('craving_favorites', JSON.stringify(favorites));
+            renderRestaurants();
+        }
+
+        // Filter Category
+        function filterCategory(cat) {
+            currentCategoryFilter = cat;
+            renderRestaurants();
+            playBeep(440, 0.05);
+        }
+
+        // Navigation View Changer
+        function changeView(viewName) {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-restaurant').classList.add('hidden');
+            document.getElementById('view-cart').classList.add('hidden');
+            document.getElementById('view-tracking').classList.add('hidden');
+
+            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Open specific restaurant menu
+        function openRestaurantMenu(restaurant) {
+            document.getElementById('rest-img').src = restaurant.image;
+            document.getElementById('rest-emoji').innerText = restaurant.emoji;
+            document.getElementById('rest-title').innerText = restaurant.name;
+            document.getElementById('rest-desc').innerText = restaurant.desc;
+            document.getElementById('rest-rating').innerText = `★ ${restaurant.rating}`;
+            document.getElementById('rest-fee').innerText = `${t('fee_label')} ${restaurant.fee}`;
+            document.getElementById('rest-time').innerText = restaurant.time;
+
+            const phone = phoneForRestaurant(restaurant.id);
+            document.getElementById('rest-phone').setAttribute('href', `tel:${phone.tel}`);
+            document.getElementById('rest-phone-label').innerText = phone.display;
+
+            const container = document.getElementById('menu-items-container');
+            container.innerHTML = '';
+
+            restaurant.menu.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "bg-white border border-slate-100 p-4 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-stretch gap-4";
+                row.innerHTML = `
+                    <div class="space-y-1.5 flex-1">
+                        <h4 class="font-extrabold text-sm text-slate-800">${item.name}</h4>
+                        <p class="text-xs text-slate-400 font-medium leading-relaxed">${item.desc}</p>
+                        <div class="text-xs font-bold text-emerald-600 font-mono">$${item.price.toFixed(2)}</div>
+                    </div>
+                    <div class="flex sm:flex-col items-center justify-between sm:justify-center gap-3 sm:w-24">
+                        <img class="w-20 h-20 sm:w-16 sm:h-16 object-cover rounded-lg border border-slate-100" src="${item.image}" alt="${item.name}" onerror="this.src='https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=150&q=80'">
+                        <button onclick="addToCart('${item.name}', ${item.price}, '${restaurant.emoji}')" class="bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-extrabold text-xs py-1.5 px-3.5 rounded-full transition shadow-sm font-sans">
+                            ${t('add_label')}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            changeView('restaurant');
+            playBeep(600, 0.08);
+        }
+
+        // Cart Actions
+        function addToCart(name, price, emoji) {
+            cart.push({ name, price, emoji });
+            playBeep(800, 0.08);
+            
+            // Render checkout/cart view and navigate
+            renderCart();
+            changeView('cart');
+        }
+
+        function renderCart() {
+            const list = document.getElementById('cart-items-list');
+            list.innerHTML = '';
+
+            let subtotal = 0;
+            cart.forEach((item, index) => {
+                subtotal += item.price;
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center text-xs font-semibold text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-100";
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span>${item.emoji}</span>
+                        <span>${item.name}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-mono text-emerald-600 font-bold">$${item.price.toFixed(2)}</span>
+                        <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-600 font-bold">✕</button>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+
+            const deliveryFee = cart.length > 0 ? 1.99 : 0;
+            const discount = subtotal * promoDiscount;
+            const total = Math.max(0, subtotal + deliveryFee + tipAmount - discount);
+
+            document.getElementById('cart-subtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('cart-delivery-fee').innerText = `$${deliveryFee.toFixed(2)}`;
+            document.getElementById('cart-tip').innerText = `$${tipAmount.toFixed(2)}`;
+            document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('btn-total-label').innerText = `$${total.toFixed(2)}`;
+        }
+
+        // Tip selector
+        function setTip(amount, btnEl) {
+            tipAmount = amount;
+            document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('bg-emerald-500', 'text-white'));
+            document.querySelectorAll('.tip-btn').forEach(b => b.classList.add('bg-slate-100', 'text-slate-600'));
+            if (btnEl) {
+                btnEl.classList.remove('bg-slate-100', 'text-slate-600');
+                btnEl.classList.add('bg-emerald-500', 'text-white');
+            }
+            playBeep(500, 0.05);
+            renderCart();
+        }
+
+        // Promo code (cosmetic realism only — one fixed demo code)
+        function applyPromo() {
+            const input = document.getElementById('promo-input');
+            const code = input.value.trim().toUpperCase();
+            if (code === 'SURFWAVE10') {
+                promoDiscount = 0.10;
+                showSimpleToast(t('toast_promo_applied'));
+            } else {
+                promoDiscount = 0;
+                showSimpleToast(t('toast_promo_invalid'));
+            }
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            playBeep(350, 0.1);
+            renderCart();
+        }
+
+        // Place Order - Transitions to tracker, requiring address here!
+        function placeOrder() {
+            const addressInput = document.getElementById('address-input');
+            const targetAddress = addressInput.value.trim();
+
+            if (cart.length === 0) {
+                showSimpleToast(t('toast_basket_empty'));
+                return;
+            }
+
+            if (!targetAddress) {
+                // Focus address input and shake it visually to draw attention
+                addressInput.classList.add('border-red-400');
+                addressInput.focus();
+                showSimpleToast(t('toast_need_address'));
+                return;
+            }
+
+            // Lock values
+            address = targetAddress;
+            addressIsPlaceholder = false;
+            document.getElementById('header-address').innerText = address;
+            document.getElementById('target-address-label').innerText = address;
+
+            // Assign a random rider for this trip
+            currentRider = riders[Math.floor(Math.random() * riders.length)];
+            document.getElementById('rider-name').innerText = currentRider.name;
+            document.getElementById('rider-phone').setAttribute('href', `tel:${currentRider.phone}`);
+
+            // Trigger sound indicator
+            playBeep(900, 0.15);
+            setTimeout(() => playBeep(1200, 0.2), 150);
+
+            // Initialize 15 min tracker countdown
+            trackingSecondsLeft = 900;
+            updateCountdownDisplay();
+            startTrackingTimer();
+
+            changeView('tracking');
+        }
+
+        // Live Courier Tracker Logic
+        function startTrackingTimer() {
+            if (trackingInterval) clearInterval(trackingInterval);
+            
+            const routePath = document.getElementById('route-path');
+            const pathLength = routePath.getTotalLength();
+            const riderPin = document.getElementById('map-rider');
+
+            trackingInterval = setInterval(() => {
+                trackingSecondsLeft--;
+                updateCountdownDisplay();
+
+                // Update animated map courier along path
+                const progress = (900 - trackingSecondsLeft) / 900; // 0 to 1
+                if (progress >= 0 && progress <= 1) {
+                    const point = routePath.getPointAtLength(progress * pathLength);
+                    riderPin.style.left = `${point.x - 20}px`;
+                    riderPin.style.top = `${point.y - 20}px`;
+                }
+
+                // Dynamic updates on courier text
+                const courierMsg = document.getElementById('courier-message');
+                if (trackingSecondsLeft > 600) {
+                    courierMsg.innerText = t('msg_courier_prep');
+                } else if (trackingSecondsLeft > 300) {
+                    courierMsg.innerText = t('msg_courier_transit');
+                } else if (trackingSecondsLeft > 0) {
+                    courierMsg.innerText = t('msg_courier_almost');
+                } else {
+                    // Delivery finished
+                    clearInterval(trackingInterval);
+                    courierMsg.innerText = t('msg_courier_done');
+                    completeUrgeSurfing();
+                }
+            }, 1000);
+        }
+
+        function updateCountdownDisplay() {
+            const minutes = Math.floor(trackingSecondsLeft / 60);
+            const seconds = trackingSecondsLeft % 60;
+            document.getElementById('tracking-timer').innerText = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Complete/Successful Wave Surfing automatically
+        function completeUrgeSurfing() {
+            stats.wavesSurfed++;
+            
+            // Calculate saved amount
+            let totalSaved = 0;
+            cart.forEach(item => totalSaved += item.price);
+            totalSaved += 1.99; // add delivery fee
+            totalSaved += tipAmount;
+            totalSaved -= totalSaved * promoDiscount;
+            stats.moneySaved += totalSaved;
+
+            saveStats();
+            updateGlobalStatsDisplay();
+
+            playBeep(1200, 0.4);
+
+            alert(`${t('alert_success')} $${totalSaved.toFixed(2)}.`);
+            resetAppToHome();
+        }
+
+        // Manual Intervention: Avert/Cancel Delivery and Win!
+        function avertCraving() {
+            if (confirm(t('alert_avert_confirm'))) {
+                let totalSaved = 0;
+                cart.forEach(item => totalSaved += item.price);
+                totalSaved += 1.99; // delivery fee
+
+                stats.wavesSurfed++;
+                stats.moneySaved += totalSaved;
+
+                saveStats();
+                updateGlobalStatsDisplay();
+
+                playBeep(1500, 0.3);
+
+                alert(`${t('alert_avert_success')} $${totalSaved.toFixed(2)} ${t('alert_avert_success_2')}`);
+                resetAppToHome();
+            }
+        }
+
+        function resetAppToHome() {
+            if (trackingInterval) clearInterval(trackingInterval);
+            cart = [];
+            tipAmount = 0;
+            promoDiscount = 0;
+            document.getElementById('address-input').value = '';
+            document.getElementById('promo-input').value = '';
+            addressIsPlaceholder = true;
+            document.getElementById('header-address').innerText = t('header_address_placeholder');
+            
+            // Stop sound
+            if (ambientOsc) {
+                try {
+                    ambientOsc.stop();
+                } catch(e){}
+                ambientOsc = null;
+            }
+            document.getElementById('bgm-btn').innerText = t('bgm_off');
+
+            changeView('home');
+        }
+
+        // Emotional Vent Box particle dissolve effect
+        function burnVentText() {
+            const textarea = document.getElementById('vent-textarea');
+            const text = textarea.value.trim();
+
+            if (!text) {
+                showSimpleToast(t('toast_vent_empty'));
+                return;
+            }
+
+            playBeep(300, 0.5);
+
+            // Shading burn effect
+            textarea.classList.add('burning');
+            setTimeout(() => {
+                textarea.value = '';
+                textarea.classList.remove('burning');
+                showSimpleToast(t('toast_vent_burned'));
+            }, 1500);
+        }
+
+        // Breathing Grounding Assistant
+        function initBreathingTimer() {
+            const orbLabel = document.getElementById('breathing-label');
+            let breathePhase = 0; // 0: inhale, 1: hold, 2: exhale
+
+            setInterval(() => {
+                breathePhase = (breathePhase + 1) % 3;
+                if (breathePhase === 0) {
+                    orbLabel.innerText = t('breathe_in');
+                    playBeep(400, 0.05);
+                } else if (breathePhase === 1) {
+                    orbLabel.innerText = t('breathe_hold');
+                } else {
+                    orbLabel.innerText = t('breathe_out');
+                    playBeep(300, 0.05);
+                }
+            }, 4000); // 4 seconds cycles
+        }
+
+        // Local Storage Utilities
+        function saveStats() {
+            localStorage.setItem('craving_stats', JSON.stringify(stats));
+        }
+
+        function updateGlobalStatsDisplay() {
+            document.getElementById('global-money-saved').innerText = `$${stats.moneySaved.toFixed(2)}`;
+            document.getElementById('global-waves').innerText = stats.wavesSurfed;
+        }
+
+        // Audio synthesizer system
+        function playBeep(freq, duration) {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        function toggleSoundtrack() {
+            if (!soundEnabled) return;
+            
+            if (ambientOsc) {
+                // Turn off
+                try {
+                    ambientOsc.stop();
+                } catch(e){}
+                ambientOsc = null;
+                document.getElementById('bgm-btn').innerText = t('bgm_off');
+            } else {
+                // Turn on binaural ocean synth sound
+                try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    ambientOsc = audioCtx.createOscillator();
+                    ambientGain = audioCtx.createGain();
+                    
+                    ambientOsc.type = 'sine';
+                    ambientOsc.frequency.setValueAtTime(90, audioCtx.currentTime); // Low soothing drone
+                    
+                    // LFO volume to simulate ocean waves
+                    ambientGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+                    
+                    ambientOsc.connect(ambientGain);
+                    ambientGain.connect(audioCtx.destination);
+                    
+                    ambientOsc.start();
+                    
+                    document.getElementById('bgm-btn').innerText = t('bgm_on');
+                    
+                    // Modulate ocean waves
+                    modulateOceanWaves();
+                } catch(e){}
+            }
+        }
+
+        function modulateOceanWaves() {
+            if (!ambientOsc) return;
+            const now = audioCtx.currentTime;
+            ambientGain.gain.linearRampToValueAtTime(0.06, now + 4);
+            ambientGain.gain.linearRampToValueAtTime(0.02, now + 8);
+            setTimeout(() => {
+                modulateOceanWaves();
+            }, 8000);
+        }
+
+        function toggleMute() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('mute-btn').innerText = soundEnabled ? "🔊" : "🔇";
+            if (!soundEnabled && ambientOsc) {
+                try { ambientOsc.stop(); } catch(e){}
+                ambientOsc = null;
+                document.getElementById('bgm-btn').innerText = "🎵 Relaxing Waves Music: OFF";
+            }
+        }
+
+        // Custom Help Modal Controls
+        function showHelpModal() {
+            toggleHelpModal(true);
+        }
+
+        function toggleHelpModal(open) {
+            const modal = document.getElementById('help-modal');
+            if (open) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        // Tiny Toast Notifications
+        function showSimpleToast(message) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white font-bold text-xs px-4 py-2.5 rounded-full z-50 shadow-lg pointer-events-none transition duration-300 transform translate-y-10 opacity-0";
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
